@@ -19,12 +19,21 @@ export default function CollectionsPage() {
     const [loading, setLoading] = useState(true);
     const [selectedQr, setSelectedQr] = useState<string | null>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
-    const fetchCollections = () => {
-        fetch('/api/collections')
+    const fetchCollections = (pageInfo = 1) => {
+        setLoading(true);
+        fetch(`/api/collections?page=${pageInfo}&limit=10`)
             .then(res => res.json())
             .then(data => {
-                if (Array.isArray(data)) setCollections(data);
+                if (data.data && Array.isArray(data.data)) {
+                    setCollections(data.data);
+                    setTotalPages(data.pagination.totalPages);
+                } else if (Array.isArray(data)) {
+                    // Fallback for older API response if needed
+                    setCollections(data);
+                }
                 setLoading(false);
             })
             .catch(err => setLoading(false));
@@ -36,7 +45,7 @@ export default function CollectionsPage() {
         try {
             const res = await fetch(`/api/collections/${id}`, { method: 'DELETE' });
             if (res.ok) {
-                fetchCollections();
+                fetchCollections(page);
             } else {
                 alert('Failed to delete');
             }
@@ -46,8 +55,8 @@ export default function CollectionsPage() {
     };
 
     useEffect(() => {
-        fetchCollections();
-    }, []);
+        fetchCollections(page);
+    }, [page]);
 
 
 
@@ -137,6 +146,33 @@ export default function CollectionsPage() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                {collections.length > 0 && (
+                    <div className="px-6 py-4 flex items-center justify-between border-t border-slate-100 bg-slate-50">
+                        <div className="text-sm text-slate-500">
+                            Page <span className="font-medium text-slate-900">{page}</span> of <span className="font-medium text-slate-900">{totalPages}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={page === 1}
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={page === totalPages}
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* QR Modal */}

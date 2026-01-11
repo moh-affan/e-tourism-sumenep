@@ -4,15 +4,34 @@ import crypto from 'crypto';
 
 export async function GET(request: Request) {
     try {
-        const collections = await prisma.collection.findMany({
-            include: {
-                qrCode: true,
-            },
-            orderBy: {
-                createdAt: 'desc',
+        const { searchParams } = new URL(request.url);
+        const page = parseInt(searchParams.get('page') || '1');
+        const limit = parseInt(searchParams.get('limit') || '10');
+        const skip = (page - 1) * limit;
+
+        const [collections, total] = await Promise.all([
+            prisma.collection.findMany({
+                include: {
+                    qrCode: true,
+                },
+                orderBy: {
+                    createdAt: 'desc',
+                },
+                skip,
+                take: limit,
+            }),
+            prisma.collection.count(),
+        ]);
+
+        return NextResponse.json({
+            data: collections,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
             }
         });
-        return NextResponse.json(collections);
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch collections' }, { status: 500 });
     }
