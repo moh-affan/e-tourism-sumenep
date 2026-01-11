@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { Edit, Trash } from 'lucide-react';
 
 interface User {
     id: string;
@@ -83,14 +84,13 @@ export default function UsersPage() {
                                 <td className="px-6 py-4">{new Date(user.createdAt).toLocaleDateString()}</td>
                                 <td className="px-6 py-4 flex items-center space-x-3">
                                     <Link href={`/admin/users/${user.id}`} className="text-indigo-600 hover:text-indigo-900 font-medium">
-                                        Edit
+                                        <Edit />
                                     </Link>
                                     <button
                                         onClick={() => handleDelete(user.id)}
-                                        className="text-red-500 hover:text-red-700 font-medium"
-                                        style={{ cursor: 'pointer' }}
+                                        className="text-red-500 hover:text-red-700 font-medium cursor-pointer"
                                     >
-                                        Delete
+                                        <Trash />
                                     </button>
                                 </td>
                             </tr>
