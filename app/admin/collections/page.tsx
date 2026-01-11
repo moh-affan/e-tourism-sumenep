@@ -2,13 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import Image from 'next/image';
 
 interface Collection {
     id: string;
     name: string;
     category: string;
-    location: string;
+    audioInd?: string;
+    audioEng?: string;
     qrCode?: { code: string };
     image?: string;
 }
@@ -46,7 +46,7 @@ export default function CollectionsPage() {
                             <tr>
                                 <th className="px-6 py-4">Name</th>
                                 <th className="px-6 py-4">Category</th>
-                                <th className="px-6 py-4">Location</th>
+                                <th className="px-6 py-4 text-center">Audio</th>
                                 <th className="px-6 py-4">QR Code</th>
                                 <th className="px-6 py-4">Actions</th>
                             </tr>
@@ -67,8 +67,19 @@ export default function CollectionsPage() {
                                             {item.category}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">{item.location}</td>
-                                    <td className="px-6 py-4 font-mono text-xs">{item.qrCode?.code?.substring(0, 8)}...</td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center justify-center space-x-2">
+                                            <span className={`px-2 py-0.5 rounded text-xs border ${item.audioInd ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>ID</span>
+                                            <span className={`px-2 py-0.5 rounded text-xs border ${item.audioEng ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>EN</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 font-mono text-xs text-slate-400">
+                                        {item.qrCode?.code ? (
+                                            <span className="truncate block w-24" title={item.qrCode.code}>
+                                                {item.qrCode.code.substring(0, 8)}...
+                                            </span>
+                                        ) : '-'}
+                                    </td>
                                     <td className="px-6 py-4">
                                         <button className="text-indigo-600 hover:text-indigo-900 font-medium">Edit</button>
                                     </td>

@@ -3,6 +3,10 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { FileUpload } from '@/components/ui/FileUpload';
+
+type Tab = 'ID' | 'EN';
+type InputMode = 'UPLOAD' | 'URL';
 
 export default function NewCollectionPage() {
     const router = useRouter();
@@ -11,9 +15,14 @@ export default function NewCollectionPage() {
         name: '',
         description: '',
         category: '',
-        location: '',
         image: '',
+        audioInd: '',
+        audioEng: '',
     });
+
+    // UI State for Audio Section
+    const [activeTab, setActiveTab] = useState<Tab>('ID');
+    const [inputMode, setInputMode] = useState<Record<Tab, InputMode>>({ ID: 'UPLOAD', EN: 'UPLOAD' });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,29 +43,39 @@ export default function NewCollectionPage() {
         }
     };
 
+    const setAudioUrl = (url: string) => {
+        if (activeTab === 'ID') setFormData(prev => ({ ...prev, audioInd: url }));
+        else setFormData(prev => ({ ...prev, audioEng: url }));
+    }
+
+    const getActiveAudioUrl = () => activeTab === 'ID' ? formData.audioInd : formData.audioEng;
+
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto pb-10">
             <h1 className="text-2xl font-bold text-slate-900 mb-6">Add New Collection</h1>
 
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <Input
-                        label="Name"
-                        value={formData.name}
-                        onChange={e => setFormData({ ...formData, name: e.target.value })}
-                        required
-                    />
-                    <div className="space-y-1.5">
-                        <label className="block text-sm font-medium text-slate-700 ml-1">Description</label>
-                        <textarea
-                            className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
-                            rows={4}
-                            value={formData.description}
-                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+
+                    {/* Basic Info Section */}
+                    <div className="space-y-6">
+                        <h3 className="text-lg font-semibold text-slate-800 border-b border-slate-100 pb-2">Basic Information</h3>
+                        <Input
+                            label="Name"
+                            value={formData.name}
+                            onChange={e => setFormData({ ...formData, name: e.target.value })}
                             required
                         />
-                    </div>
-                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-medium text-slate-700 ml-1">Description</label>
+                            <textarea
+                                className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
+                                rows={4}
+                                value={formData.description}
+                                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                required
+                            />
+                        </div>
                         <Input
                             label="Category"
                             placeholder="e.g. Keraton, Museum"
@@ -65,19 +84,79 @@ export default function NewCollectionPage() {
                             required
                         />
                         <Input
-                            label="Location"
-                            value={formData.location}
-                            onChange={e => setFormData({ ...formData, location: e.target.value })}
-                            required
+                            label="Image URL (Optional)"
+                            value={formData.image}
+                            onChange={e => setFormData({ ...formData, image: e.target.value })}
                         />
                     </div>
-                    <Input
-                        label="Image URL (Optional)"
-                        value={formData.image}
-                        onChange={e => setFormData({ ...formData, image: e.target.value })}
-                    />
 
-                    <div className="pt-4 flex items-center justify-end space-x-4">
+                    {/* Audio Guide Section */}
+                    <div className="space-y-4 pt-4">
+                        <h3 className="text-lg font-semibold text-slate-800 border-b border-slate-100 pb-2">Audio Guide</h3>
+
+                        <div className="bg-slate-50 p-1 rounded-xl inline-flex mb-4">
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('ID')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'ID' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                🇮🇩 Indonesia
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('EN')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'EN' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                🇬🇧 English
+                            </button>
+                        </div>
+
+                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div className="flex space-x-4 mb-4 text-sm">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name={`mode-${activeTab}`}
+                                        checked={inputMode[activeTab] === 'UPLOAD'}
+                                        onChange={() => setInputMode(prev => ({ ...prev, [activeTab]: 'UPLOAD' }))}
+                                        className="text-indigo-600 focus:ring-indigo-500"
+                                    />
+                                    <span>Upload File</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name={`mode-${activeTab}`}
+                                        checked={inputMode[activeTab] === 'URL'}
+                                        onChange={() => setInputMode(prev => ({ ...prev, [activeTab]: 'URL' }))}
+                                        className="text-indigo-600 focus:ring-indigo-500"
+                                    />
+                                    <span>Direct URL</span>
+                                </label>
+                            </div>
+
+                            {inputMode[activeTab] === 'UPLOAD' ? (
+                                <div className="space-y-2">
+                                    <FileUpload
+                                        label={`Upload ${activeTab === 'ID' ? 'Indonesian' : 'English'} Audio`}
+                                        onUploadComplete={setAudioUrl}
+                                    />
+                                    {getActiveAudioUrl() && (
+                                        <p className="text-xs text-green-600 font-medium">✅ File uploaded: {getActiveAudioUrl()}</p>
+                                    )}
+                                </div>
+                            ) : (
+                                <Input
+                                    label={`URL for ${activeTab === 'ID' ? 'Indonesian' : 'English'} Audio`}
+                                    value={getActiveAudioUrl() || ''}
+                                    onChange={(e) => setAudioUrl(e.target.value)}
+                                    placeholder="https://..."
+                                />
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="pt-6 flex items-center justify-end space-x-4 border-t border-slate-100">
                         <Button type="button" variant="ghost" onClick={() => router.back()}>Cancel</Button>
                         <Button type="submit" isLoading={loading}>Create Collection</Button>
                     </div>

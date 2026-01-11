@@ -8,6 +8,9 @@ export async function GET(request: Request) {
             include: {
                 qrCode: true,
             },
+            orderBy: {
+                createdAt: 'desc',
+            }
         });
         return NextResponse.json(collections);
     } catch (error) {
@@ -18,7 +21,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { name, description, category, location, image } = body;
+        const { name, description, category, image, audioInd, audioEng } = body;
 
         // Transaction to create collection and qr code
         const result = await prisma.$transaction(async (tx) => {
@@ -27,8 +30,9 @@ export async function POST(request: Request) {
                     name,
                     description,
                     category,
-                    location,
                     image,
+                    audioInd,
+                    audioEng,
                 }
             });
 
