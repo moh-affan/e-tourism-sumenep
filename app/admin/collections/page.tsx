@@ -17,7 +17,7 @@ export default function CollectionsPage() {
     const [collections, setCollections] = useState<Collection[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+    const fetchCollections = () => {
         fetch('/api/collections')
             .then(res => res.json())
             .then(data => {
@@ -25,7 +25,26 @@ export default function CollectionsPage() {
                 setLoading(false);
             })
             .catch(err => setLoading(false));
+    }
+
+    useEffect(() => {
+        fetchCollections();
     }, []);
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this collection?')) return;
+
+        try {
+            const res = await fetch(`/api/collections/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                fetchCollections();
+            } else {
+                alert('Failed to delete');
+            }
+        } catch (e) {
+            alert('Error deleting item');
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -80,8 +99,17 @@ export default function CollectionsPage() {
                                             </span>
                                         ) : '-'}
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <button className="text-indigo-600 hover:text-indigo-900 font-medium">Edit</button>
+                                    <td className="px-6 py-4 flex items-center space-x-3">
+                                        <Link href={`/admin/collections/${item.id}`} className="text-indigo-600 hover:text-indigo-900 font-medium">
+                                            Edit
+                                        </Link>
+                                        <button
+                                            onClick={() => handleDelete(item.id)}
+                                            className="text-red-500 hover:text-red-700 font-medium"
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            Delete
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

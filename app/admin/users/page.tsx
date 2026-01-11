@@ -15,7 +15,7 @@ export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+    const fetchUsers = () => {
         fetch('/api/users')
             .then(res => res.json())
             .then(data => {
@@ -23,7 +23,26 @@ export default function UsersPage() {
                 setLoading(false);
             })
             .catch(err => setLoading(false));
+    }
+
+    useEffect(() => {
+        fetchUsers();
     }, []);
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this user?')) return;
+
+        try {
+            const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                fetchUsers();
+            } else {
+                alert('Failed to delete');
+            }
+        } catch (e) {
+            alert('Error deleting user');
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -55,15 +74,24 @@ export default function UsersPage() {
                                 <td className="px-6 py-4">{user.email}</td>
                                 <td className="px-6 py-4">
                                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${user.role === 'ADMIN'
-                                            ? 'bg-purple-100 text-purple-700'
-                                            : 'bg-emerald-100 text-emerald-700'
+                                        ? 'bg-purple-100 text-purple-700'
+                                        : 'bg-emerald-100 text-emerald-700'
                                         }`}>
                                         {user.role}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">{new Date(user.createdAt).toLocaleDateString()}</td>
-                                <td className="px-6 py-4">
-                                    <button className="text-indigo-600 hover:text-indigo-900 font-medium">Edit</button>
+                                <td className="px-6 py-4 flex items-center space-x-3">
+                                    <Link href={`/admin/users/${user.id}`} className="text-indigo-600 hover:text-indigo-900 font-medium">
+                                        Edit
+                                    </Link>
+                                    <button
+                                        onClick={() => handleDelete(user.id)}
+                                        className="text-red-500 hover:text-red-700 font-medium"
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        Delete
+                                    </button>
                                 </td>
                             </tr>
                         ))}
