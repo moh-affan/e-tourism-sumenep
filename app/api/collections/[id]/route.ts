@@ -19,7 +19,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     try {
         const id = (await params).id;
         const body = await request.json();
-        const { name, description, category, image, audioInd, audioEng } = body;
+        const { name, description, category, image, narrative } = body;
 
         const updated = await prisma.collection.update({
             where: { id },
@@ -28,8 +28,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
                 description,
                 category,
                 image,
-                audioInd,
-                audioEng,
+                narrative,
             }
         });
         return NextResponse.json(updated);

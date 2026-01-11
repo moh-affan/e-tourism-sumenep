@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { name, description, category, image, audioInd, audioEng } = body;
+        const { name, description, category, image, narrative } = body;
 
         // Transaction to create collection and qr code
         const result = await prisma.$transaction(async (tx) => {
@@ -31,8 +31,7 @@ export async function POST(request: Request) {
                     description,
                     category,
                     image,
-                    audioInd,
-                    audioEng,
+                    narrative,
                 }
             });
 

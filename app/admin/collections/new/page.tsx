@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FileUpload } from '@/components/ui/FileUpload';
 
-type Tab = 'ID' | 'EN';
-type InputMode = 'UPLOAD' | 'URL';
+
+
 
 export default function NewCollectionPage() {
     const router = useRouter();
@@ -16,13 +16,9 @@ export default function NewCollectionPage() {
         description: '',
         category: '',
         image: '',
-        audioInd: '',
-        audioEng: '',
+        narrative: '',
     });
-
-    // UI State for Audio Section
-    const [activeTab, setActiveTab] = useState<Tab>('ID');
-    const [inputMode, setInputMode] = useState<Record<Tab, InputMode>>({ ID: 'UPLOAD', EN: 'UPLOAD' });
+    const [imageInputMode, setImageInputMode] = useState<'UPLOAD' | 'URL'>('UPLOAD');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,12 +39,7 @@ export default function NewCollectionPage() {
         }
     };
 
-    const setAudioUrl = (url: string) => {
-        if (activeTab === 'ID') setFormData(prev => ({ ...prev, audioInd: url }));
-        else setFormData(prev => ({ ...prev, audioEng: url }));
-    }
 
-    const getActiveAudioUrl = () => activeTab === 'ID' ? formData.audioInd : formData.audioEng;
 
     return (
         <div className="max-w-2xl mx-auto pb-10">
@@ -83,77 +74,69 @@ export default function NewCollectionPage() {
                             onChange={e => setFormData({ ...formData, category: e.target.value })}
                             required
                         />
-                        <Input
-                            label="Image URL (Optional)"
-                            value={formData.image}
-                            onChange={e => setFormData({ ...formData, image: e.target.value })}
-                        />
-                    </div>
+                        <div className="space-y-3">
+                            <label className="block text-sm font-medium text-slate-700 ml-1">Collection Image</label>
 
-                    {/* Audio Guide Section */}
-                    <div className="space-y-4 pt-4">
-                        <h3 className="text-lg font-semibold text-slate-800 border-b border-slate-100 pb-2">Audio Guide</h3>
-
-                        <div className="bg-slate-50 p-1 rounded-xl inline-flex mb-4">
-                            <button
-                                type="button"
-                                onClick={() => setActiveTab('ID')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'ID' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                🇮🇩 Indonesia
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setActiveTab('EN')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'EN' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                🇬🇧 English
-                            </button>
-                        </div>
-
-                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                            <div className="flex space-x-4 mb-4 text-sm">
-                                <label className="flex items-center space-x-2 cursor-pointer">
+                            <div className="flex space-x-6 text-sm mb-2 px-1">
+                                <label className="flex items-center space-x-2 cursor-pointer group">
                                     <input
                                         type="radio"
-                                        name={`mode-${activeTab}`}
-                                        checked={inputMode[activeTab] === 'UPLOAD'}
-                                        onChange={() => setInputMode(prev => ({ ...prev, [activeTab]: 'UPLOAD' }))}
-                                        className="text-indigo-600 focus:ring-indigo-500"
+                                        checked={imageInputMode === 'UPLOAD'}
+                                        onChange={() => setImageInputMode('UPLOAD')}
+                                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
                                     />
-                                    <span>Upload File</span>
+                                    <span className={`group-hover:text-indigo-600 transition-colors ${imageInputMode === 'UPLOAD' ? 'text-slate-900 font-medium' : 'text-slate-500'}`}>Upload Image</span>
                                 </label>
-                                <label className="flex items-center space-x-2 cursor-pointer">
+                                <label className="flex items-center space-x-2 cursor-pointer group">
                                     <input
                                         type="radio"
-                                        name={`mode-${activeTab}`}
-                                        checked={inputMode[activeTab] === 'URL'}
-                                        onChange={() => setInputMode(prev => ({ ...prev, [activeTab]: 'URL' }))}
-                                        className="text-indigo-600 focus:ring-indigo-500"
+                                        checked={imageInputMode === 'URL'}
+                                        onChange={() => setImageInputMode('URL')}
+                                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
                                     />
-                                    <span>Direct URL</span>
+                                    <span className={`group-hover:text-indigo-600 transition-colors ${imageInputMode === 'URL' ? 'text-slate-900 font-medium' : 'text-slate-500'}`}>External URL</span>
                                 </label>
                             </div>
 
-                            {inputMode[activeTab] === 'UPLOAD' ? (
-                                <div className="space-y-2">
-                                    <FileUpload
-                                        key={activeTab} // Force remount when tab changes
-                                        label={`Upload ${activeTab === 'ID' ? 'Indonesian' : 'English'} Audio`}
-                                        onUploadComplete={setAudioUrl}
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                {imageInputMode === 'UPLOAD' ? (
+                                    <div className="space-y-3">
+                                        <FileUpload
+                                            label="Upload Collection Image"
+                                            onUploadComplete={(url) => setFormData(prev => ({ ...prev, image: url }))}
+                                        />
+                                        {formData.image && (
+                                            <div className="text-sm text-slate-600 bg-white px-3 py-2 rounded-lg border border-slate-100 flex items-center space-x-2">
+                                                <span className="text-green-500">✓</span>
+                                                <span className="truncate flex-1">{formData.image}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <Input
+                                        label="Image URL"
+                                        placeholder="https://example.com/image.jpg"
+                                        value={formData.image}
+                                        onChange={e => setFormData({ ...formData, image: e.target.value })}
+                                        className="bg-white"
                                     />
-                                    {getActiveAudioUrl() && (
-                                        <p className="text-xs text-green-600 font-medium">✅ File uploaded: {getActiveAudioUrl()}</p>
-                                    )}
-                                </div>
-                            ) : (
-                                <Input
-                                    label={`URL for ${activeTab === 'ID' ? 'Indonesian' : 'English'} Audio`}
-                                    value={getActiveAudioUrl() || ''}
-                                    onChange={(e) => setAudioUrl(e.target.value)}
-                                    placeholder="https://..."
-                                />
-                            )}
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Narrative Section */}
+                    <div className="space-y-6 pt-4">
+                        <h3 className="text-lg font-semibold text-slate-800 border-b border-slate-100 pb-2">Narrative</h3>
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-medium text-slate-700 ml-1">Narrative Text (Long)</label>
+                            <textarea
+                                className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
+                                rows={8}
+                                value={formData.narrative}
+                                onChange={e => setFormData({ ...formData, narrative: e.target.value })}
+                                placeholder="Enter specific narrative or detailed story here..."
+                            />
                         </div>
                     </div>
 

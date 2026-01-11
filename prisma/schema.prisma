@@ -27,8 +27,7 @@ model Collection {
   description String
   category    String
   image       String?
-  audioInd    String? // Url to Indonesian Audio
-  audioEng    String? // Url to English Audio
+  narrative   String? // Long text description
   qrCode      QRCode?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

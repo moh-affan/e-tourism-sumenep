@@ -3,13 +3,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
+import { Edit, Image, Trash } from 'lucide-react';
 
 interface Collection {
     id: string;
     name: string;
     category: string;
-    audioInd?: string;
-    audioEng?: string;
+    narrative?: string;
     qrCode?: { code: string };
     image?: string;
 }
@@ -18,10 +18,7 @@ export default function CollectionsPage() {
     const [collections, setCollections] = useState<Collection[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedQr, setSelectedQr] = useState<string | null>(null);
-
-    // Audio Player State
-    const [playingUrl, setPlayingUrl] = useState<string | null>(null);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const fetchCollections = () => {
         fetch('/api/collections')
@@ -32,43 +29,6 @@ export default function CollectionsPage() {
             })
             .catch(err => setLoading(false));
     }
-
-    useEffect(() => {
-        fetchCollections();
-        return () => {
-            // Cleanup audio on unmount
-            if (audioRef.current) {
-                audioRef.current.pause();
-                audioRef.current = null;
-            }
-        };
-    }, []);
-
-    const toggleAudio = (url: string) => {
-        if (playingUrl === url) {
-            // Stop current
-            audioRef.current?.pause();
-            audioRef.current = null;
-            setPlayingUrl(null);
-        } else {
-            // Stop previous if exists
-            if (audioRef.current) {
-                audioRef.current.pause();
-            }
-
-            // Play new
-            const audio = new Audio(url);
-            audio.onended = () => setPlayingUrl(null);
-            audio.play().catch(e => {
-                console.error("Playback failed", e);
-                alert("Could not play audio");
-                setPlayingUrl(null);
-            });
-
-            audioRef.current = audio;
-            setPlayingUrl(url);
-        }
-    };
 
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure you want to delete this collection?')) return;
@@ -85,25 +45,11 @@ export default function CollectionsPage() {
         }
     };
 
-    const AudioBadge = ({ lang, url }: { lang: 'ID' | 'EN', url?: string }) => {
-        if (!url) {
-            return <span className="px-2 py-0.5 rounded text-xs border bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed">{lang}</span>
-        }
+    useEffect(() => {
+        fetchCollections();
+    }, []);
 
-        const isPlaying = playingUrl === url;
-        return (
-            <button
-                onClick={() => toggleAudio(url)}
-                className={`px-2 py-0.5 rounded text-xs border flex items-center space-x-1 transition-all ${isPlaying
-                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-md scale-105'
-                    : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
-                    }`}
-            >
-                <span>{lang}</span>
-                <span>{isPlaying ? '⏸' : '▶'}</span>
-            </button>
-        );
-    };
+
 
     return (
         <div className="space-y-6">
@@ -124,7 +70,7 @@ export default function CollectionsPage() {
                             <tr>
                                 <th className="px-6 py-4">Name</th>
                                 <th className="px-6 py-4">Category</th>
-                                <th className="px-6 py-4 text-center">Audio</th>
+                                <th className="px-6 py-4">Narrative</th>
                                 <th className="px-6 py-4">QR Code</th>
                                 <th className="px-6 py-4">Actions</th>
                             </tr>
@@ -146,10 +92,9 @@ export default function CollectionsPage() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="flex items-center justify-center space-x-2">
-                                            <AudioBadge lang="ID" url={item.audioInd} />
-                                            <AudioBadge lang="EN" url={item.audioEng} />
-                                        </div>
+                                        <p className="text-xs text-slate-500 line-clamp-2 max-w-xs" title={item.narrative}>
+                                            {item.narrative || '-'}
+                                        </p>
                                     </td>
                                     <td className="px-6 py-4 font-mono text-xs text-slate-400">
                                         {item.qrCode?.code ? (
@@ -163,15 +108,28 @@ export default function CollectionsPage() {
                                         ) : '-'}
                                     </td>
                                     <td className="px-6 py-4 flex items-center space-x-3">
-                                        <Link href={`/admin/collections/${item.id}`} className="text-indigo-600 hover:text-indigo-900 font-medium">
-                                            Edit
+                                        <Link
+                                            href={`/admin/collections/${item.id}`}
+                                            className="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-colors"
+                                            title="Edit"
+                                        >
+                                            <Edit />
                                         </Link>
+                                        {item.image && (
+                                            <button
+                                                onClick={() => setSelectedImage(item.image!)}
+                                                className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                                title="View Image"
+                                            >
+                                                <Image />
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => handleDelete(item.id)}
-                                            className="text-red-500 hover:text-red-700 font-medium"
-                                            style={{ cursor: 'pointer' }}
+                                            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                            title="Delete"
                                         >
-                                            Delete
+                                            <Trash />
                                         </button>
                                     </td>
                                 </tr>
@@ -193,6 +151,29 @@ export default function CollectionsPage() {
                             {selectedQr}
                         </div>
                         <Button className="w-full" onClick={() => setSelectedQr(null)}>
+                            Close
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* Image Modal */}
+            {selectedImage && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setSelectedImage(null)}>
+                    <div className="bg-white p-6 rounded-3xl shadow-2xl max-w-2xl w-full mx-auto text-center space-y-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-slate-900">Image Preview</h3>
+                        <div className="bg-slate-50 p-2 rounded-2xl border border-slate-100 overflow-hidden">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={selectedImage}
+                                alt="Collection Preview"
+                                className="w-full h-auto max-h-[60vh] object-contain rounded-xl"
+                            />
+                        </div>
+                        <div className="bg-slate-50 p-3 rounded-xl break-all font-mono text-xs text-slate-500 border border-slate-100">
+                            {selectedImage}
+                        </div>
+                        <Button className="w-full" onClick={() => setSelectedImage(null)}>
                             Close
                         </Button>
                     </div>

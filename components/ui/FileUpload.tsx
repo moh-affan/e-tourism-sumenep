@@ -10,7 +10,7 @@ interface FileUploadProps {
     className?: string;
 }
 
-export const FileUpload: React.FC<FileUploadProps> = ({ label, onUploadComplete, accept = 'audio/*', className = '' }) => {
+export const FileUpload: React.FC<FileUploadProps> = ({ label, onUploadComplete, accept = 'image/*', className = '' }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState('');
     const [fileName, setFileName] = useState('');
