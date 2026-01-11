@@ -138,6 +138,7 @@ export default function NewCollectionPage() {
                             {inputMode[activeTab] === 'UPLOAD' ? (
                                 <div className="space-y-2">
                                     <FileUpload
+                                        key={activeTab} // Force remount when tab changes
                                         label={`Upload ${activeTab === 'ID' ? 'Indonesian' : 'English'} Audio`}
                                         onUploadComplete={setAudioUrl}
                                     />
