@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
@@ -19,6 +19,10 @@ export default function CollectionsPage() {
     const [loading, setLoading] = useState(true);
     const [selectedQr, setSelectedQr] = useState<string | null>(null);
 
+    // Audio Player State
+    const [playingUrl, setPlayingUrl] = useState<string | null>(null);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
     const fetchCollections = () => {
         fetch('/api/collections')
             .then(res => res.json())
@@ -31,7 +35,40 @@ export default function CollectionsPage() {
 
     useEffect(() => {
         fetchCollections();
+        return () => {
+            // Cleanup audio on unmount
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
     }, []);
+
+    const toggleAudio = (url: string) => {
+        if (playingUrl === url) {
+            // Stop current
+            audioRef.current?.pause();
+            audioRef.current = null;
+            setPlayingUrl(null);
+        } else {
+            // Stop previous if exists
+            if (audioRef.current) {
+                audioRef.current.pause();
+            }
+
+            // Play new
+            const audio = new Audio(url);
+            audio.onended = () => setPlayingUrl(null);
+            audio.play().catch(e => {
+                console.error("Playback failed", e);
+                alert("Could not play audio");
+                setPlayingUrl(null);
+            });
+
+            audioRef.current = audio;
+            setPlayingUrl(url);
+        }
+    };
 
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure you want to delete this collection?')) return;
@@ -46,6 +83,26 @@ export default function CollectionsPage() {
         } catch (e) {
             alert('Error deleting item');
         }
+    };
+
+    const AudioBadge = ({ lang, url }: { lang: 'ID' | 'EN', url?: string }) => {
+        if (!url) {
+            return <span className="px-2 py-0.5 rounded text-xs border bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed">{lang}</span>
+        }
+
+        const isPlaying = playingUrl === url;
+        return (
+            <button
+                onClick={() => toggleAudio(url)}
+                className={`px-2 py-0.5 rounded text-xs border flex items-center space-x-1 transition-all ${isPlaying
+                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-md scale-105'
+                    : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
+                    }`}
+            >
+                <span>{lang}</span>
+                <span>{isPlaying ? '⏸' : '▶'}</span>
+            </button>
+        );
     };
 
     return (
@@ -90,8 +147,8 @@ export default function CollectionsPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center justify-center space-x-2">
-                                            <span className={`px-2 py-0.5 rounded text-xs border ${item.audioInd ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>ID</span>
-                                            <span className={`px-2 py-0.5 rounded text-xs border ${item.audioEng ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>EN</span>
+                                            <AudioBadge lang="ID" url={item.audioInd} />
+                                            <AudioBadge lang="EN" url={item.audioEng} />
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 font-mono text-xs text-slate-400">
@@ -112,6 +169,7 @@ export default function CollectionsPage() {
                                         <button
                                             onClick={() => handleDelete(item.id)}
                                             className="text-red-500 hover:text-red-700 font-medium"
+                                            style={{ cursor: 'pointer' }}
                                         >
                                             Delete
                                         </button>
