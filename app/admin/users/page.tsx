@@ -15,20 +15,28 @@ interface User {
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
-    const fetchUsers = () => {
-        fetch('/api/users')
+    const fetchUsers = (pageInfo = 1) => {
+        fetch(`/api/users?page=${pageInfo}&limit=10`)
             .then(res => res.json())
             .then(data => {
-                if (Array.isArray(data)) setUsers(data);
+                if (data.data && Array.isArray(data.data)) {
+                    setUsers(data.data);
+                    setTotalPages(data.pagination.totalPages);
+                } else if (Array.isArray(data)) {
+                    // Fallback for older API response if needed
+                    setUsers(data);
+                }
                 setLoading(false);
             })
             .catch(err => setLoading(false));
     }
 
     useEffect(() => {
-        fetchUsers();
-    }, []);
+        fetchUsers(page);
+    }, [page]);
 
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure you want to delete this user?')) return;
@@ -36,7 +44,7 @@ export default function UsersPage() {
         try {
             const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
             if (res.ok) {
-                fetchUsers();
+                fetchUsers(page);
             } else {
                 alert('Failed to delete');
             }
@@ -98,6 +106,33 @@ export default function UsersPage() {
                     </tbody>
                 </table>
             </div>
+
+            {/* Pagination */}
+            {users.length > 0 && (
+                <div className="px-6 py-4 flex items-center justify-between border-t border-slate-100 bg-slate-50">
+                    <div className="text-sm text-slate-500">
+                        Page <span className="font-medium text-slate-900">{page}</span> of <span className="font-medium text-slate-900">{totalPages}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={page === 1}
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                        >
+                            Previous
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={page === totalPages}
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
