@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface Collection {
     id: string;
@@ -16,6 +17,7 @@ interface Collection {
 export default function CollectionsPage() {
     const [collections, setCollections] = useState<Collection[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedQr, setSelectedQr] = useState<string | null>(null);
 
     const fetchCollections = () => {
         fetch('/api/collections')
@@ -94,9 +96,13 @@ export default function CollectionsPage() {
                                     </td>
                                     <td className="px-6 py-4 font-mono text-xs text-slate-400">
                                         {item.qrCode?.code ? (
-                                            <span className="truncate block w-24" title={item.qrCode.code}>
-                                                {item.qrCode.code.substring(0, 8)}...
-                                            </span>
+                                            <button
+                                                onClick={() => setSelectedQr(item.qrCode!.code)}
+                                                className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-800 hover:underline"
+                                            >
+                                                <span>{item.qrCode.code.substring(0, 8)}...</span>
+                                                <span className="text-sm">🔍</span>
+                                            </button>
                                         ) : '-'}
                                     </td>
                                     <td className="px-6 py-4 flex items-center space-x-3">
@@ -106,7 +112,6 @@ export default function CollectionsPage() {
                                         <button
                                             onClick={() => handleDelete(item.id)}
                                             className="text-red-500 hover:text-red-700 font-medium"
-                                            style={{ cursor: 'pointer' }}
                                         >
                                             Delete
                                         </button>
@@ -117,6 +122,24 @@ export default function CollectionsPage() {
                     </table>
                 </div>
             </div>
+
+            {/* QR Modal */}
+            {selectedQr && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setSelectedQr(null)}>
+                    <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full mx-auto text-center space-y-6" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-slate-900">QR Code Identity</h3>
+                        <div className="bg-slate-50 p-6 rounded-2xl inline-block border border-slate-100">
+                            <QRCodeSVG value={selectedQr} size={200} />
+                        </div>
+                        <div className="bg-slate-50 p-3 rounded-xl break-all font-mono text-xs text-slate-500 border border-slate-100">
+                            {selectedQr}
+                        </div>
+                        <Button className="w-full" onClick={() => setSelectedQr(null)}>
+                            Close
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
