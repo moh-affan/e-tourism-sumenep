@@ -6,6 +6,7 @@ const links = [
     { href: '/admin', label: 'Dashboard', icon: '📊' },
     { href: '/admin/collections', label: 'Collections', icon: '🏛️' },
     { href: '/admin/users', label: 'Users', icon: '👥' },
+    { href: '/admin/api-keys', label: 'API Keys', icon: '🔑' },
 ];
 
 export const AppSidebar = () => {
