@@ -55,7 +55,7 @@ Jalankan perintah prisma untuk membuat file database SQLite dan menerapkan skema
 
 ```bash
 # Push skema ke database (cara paling cepat untuk development)
-npx prisma migrate dev
+npx prisma db push
 ```
 
 setelah itu buat prisma client
